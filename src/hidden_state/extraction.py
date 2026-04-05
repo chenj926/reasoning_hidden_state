@@ -47,11 +47,24 @@ def build_vanilla_bundle_for_question(
     *,
     benchmark_style: str,
     use_chat_template: bool,
+    enable_thinking: bool | None,
     system_prompt: str,
 ) -> SteeringBundle:
     pair = build_prompt_pair_for_question(question, benchmark_style)
-    cot_prompt = maybe_apply_chat_template(bundle.tokenizer, pair.cot_prompt, use_chat_template=use_chat_template, system_prompt=system_prompt)
-    norm_prompt = maybe_apply_chat_template(bundle.tokenizer, pair.norm_prompt, use_chat_template=use_chat_template, system_prompt=system_prompt)
+    cot_prompt = maybe_apply_chat_template(
+        bundle.tokenizer,
+        pair.cot_prompt,
+        use_chat_template=use_chat_template,
+        enable_thinking=enable_thinking,
+        system_prompt=system_prompt,
+    )
+    norm_prompt = maybe_apply_chat_template(
+        bundle.tokenizer,
+        pair.norm_prompt,
+        use_chat_template=use_chat_template,
+        enable_thinking=enable_thinking,
+        system_prompt=system_prompt,
+    )
     cot_states = extract_final_prompt_token_hidden_states(bundle, cot_prompt)
     norm_states = extract_final_prompt_token_hidden_states(bundle, norm_prompt)
     return SteeringBundle(
@@ -61,6 +74,9 @@ def build_vanilla_bundle_for_question(
             **bundle.architecture_metadata(),
             "question": question,
             "benchmark_style": benchmark_style,
+            "use_chat_template": bool(use_chat_template),
+            "enable_thinking": enable_thinking,
+            "system_prompt": system_prompt,
         },
     )
 
@@ -71,14 +87,27 @@ def build_tgs_bundle(
     *,
     benchmark_style: str,
     use_chat_template: bool,
+    enable_thinking: bool | None,
     system_prompt: str,
 ) -> SteeringBundle:
     accumulators: dict[int, torch.Tensor] = {}
     count = 0
     for question in tqdm(questions, desc="Building TGS bundle"):
         pair = build_prompt_pair_for_question(question, benchmark_style)
-        cot_prompt = maybe_apply_chat_template(bundle.tokenizer, pair.cot_prompt, use_chat_template=use_chat_template, system_prompt=system_prompt)
-        norm_prompt = maybe_apply_chat_template(bundle.tokenizer, pair.norm_prompt, use_chat_template=use_chat_template, system_prompt=system_prompt)
+        cot_prompt = maybe_apply_chat_template(
+            bundle.tokenizer,
+            pair.cot_prompt,
+            use_chat_template=use_chat_template,
+            enable_thinking=enable_thinking,
+            system_prompt=system_prompt,
+        )
+        norm_prompt = maybe_apply_chat_template(
+            bundle.tokenizer,
+            pair.norm_prompt,
+            use_chat_template=use_chat_template,
+            enable_thinking=enable_thinking,
+            system_prompt=system_prompt,
+        )
         cot_states = extract_final_prompt_token_hidden_states(bundle, cot_prompt)
         norm_states = extract_final_prompt_token_hidden_states(bundle, norm_prompt)
         diff = difference_dict(cot_states, norm_states)
@@ -99,5 +128,8 @@ def build_tgs_bundle(
             **bundle.architecture_metadata(),
             "auxiliary_count": count,
             "benchmark_style": benchmark_style,
+            "use_chat_template": bool(use_chat_template),
+            "enable_thinking": enable_thinking,
+            "system_prompt": system_prompt,
         },
     )

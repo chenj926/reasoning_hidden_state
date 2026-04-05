@@ -42,6 +42,7 @@ def main() -> None:
     parser.add_argument('--offset', type=int, default=0)
     parser.add_argument('--benchmark-style', default='math_greedy', choices=['gsm8k','math_stock','math_greedy'])
     parser.add_argument('--use-chat-template', action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument('--enable-thinking', action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument('--system-prompt', default='You are a careful mathematical reasoning assistant.')
     parser.add_argument('--output', required=True)
     args = parser.parse_args()
@@ -54,6 +55,7 @@ def main() -> None:
         questions,
         benchmark_style=args.benchmark_style,
         use_chat_template=args.use_chat_template,
+        enable_thinking=args.enable_thinking,
         system_prompt=args.system_prompt,
     )
     save_steering_bundle(tgs, args.output)
@@ -68,6 +70,7 @@ def main() -> None:
         'offset': args.offset,
         'benchmark_style': args.benchmark_style,
         'use_chat_template': args.use_chat_template,
+        'enable_thinking': args.enable_thinking,
         'vector_norms': tgs.vector_norms(),
         'layer_indices': tgs.layer_indices,
         'metadata': tgs.metadata,

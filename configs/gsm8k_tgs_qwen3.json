@@ -1,0 +1,14 @@
+{
+  "precision": "bf16",
+  "steering_method": "tgs",
+  "alpha": 0.05,
+  "k": 5,
+  "norm_preserving": true,
+  "tgs_vector_path": "artifacts/tgs_gsm8k_train32_qwen3_0.6b_chat_nothink.pt",
+  "use_chat_template": true,
+  "enable_thinking": false,
+  "system_prompt": "You are a careful mathematical reasoning assistant.",
+  "default_max_new_tokens": 256,
+  "temperature_for_sampling": 0.7,
+  "top_p_for_sampling": 0.95
+}

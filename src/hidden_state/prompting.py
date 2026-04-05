@@ -41,6 +41,7 @@ def maybe_apply_chat_template(
     prompt_text: str,
     *,
     use_chat_template: bool,
+    enable_thinking: bool | None = None,
     system_prompt: str = DEFAULT_SYSTEM_PROMPT,
 ) -> str:
     if not use_chat_template:
@@ -49,7 +50,17 @@ def maybe_apply_chat_template(
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": prompt_text},
     ]
-    return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    kwargs = {
+        "tokenize": False,
+        "add_generation_prompt": True,
+    }
+    if enable_thinking is not None:
+        kwargs["enable_thinking"] = enable_thinking
+    try:
+        return tokenizer.apply_chat_template(messages, **kwargs)
+    except TypeError:
+        kwargs.pop("enable_thinking", None)
+        return tokenizer.apply_chat_template(messages, **kwargs)
 
 
 def build_prompt_pair_for_question(question: str, benchmark_style: str) -> PromptPair:

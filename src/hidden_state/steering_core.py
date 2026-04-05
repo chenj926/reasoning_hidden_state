@@ -55,7 +55,15 @@ def load_steering_bundle(path: str | Path) -> SteeringBundle:
     )
 
 
-def validate_steering_bundle_for_model(bundle: SteeringBundle, model, model_id: str) -> None:
+def validate_steering_bundle_for_model(
+    bundle: SteeringBundle,
+    model,
+    model_id: str,
+    *,
+    use_chat_template: bool | None = None,
+    enable_thinking: bool | None = None,
+    system_prompt: str | None = None,
+) -> None:
     config = model.config
     expected_hidden_size = getattr(config, "hidden_size", None)
     expected_num_hidden_layers = getattr(config, "num_hidden_layers", None)
@@ -115,6 +123,35 @@ def validate_steering_bundle_for_model(bundle: SteeringBundle, model, model_id: 
                 "Steering bundle vector size mismatch: "
                 f"layer {layer_idx} has dim {actual_size}, but {model_id} expects {expected_hidden_size}. "
                 "Rebuild the bundle for the target model."
+            )
+
+    bundle_use_chat_template = bundle.metadata.get("use_chat_template")
+    if use_chat_template is not None and bundle_use_chat_template is not None:
+        if bool(bundle_use_chat_template) != bool(use_chat_template):
+            raise ValueError(
+                "Steering bundle prompt-format mismatch: "
+                f"bundle was built with use_chat_template={bundle_use_chat_template}, "
+                f"but runtime requested use_chat_template={use_chat_template}. "
+                "Rebuild the bundle with the same prompt formatting as evaluation."
+            )
+
+    bundle_enable_thinking = bundle.metadata.get("enable_thinking")
+    if enable_thinking is not None and bundle_enable_thinking is not None:
+        if bool(bundle_enable_thinking) != bool(enable_thinking):
+            raise ValueError(
+                "Steering bundle thinking-mode mismatch: "
+                f"bundle was built with enable_thinking={bundle_enable_thinking}, "
+                f"but runtime requested enable_thinking={enable_thinking}. "
+                "Rebuild the bundle with the same thinking setting as evaluation."
+            )
+
+    bundle_system_prompt = bundle.metadata.get("system_prompt")
+    if system_prompt is not None and bundle_system_prompt is not None:
+        if str(bundle_system_prompt) != str(system_prompt):
+            raise ValueError(
+                "Steering bundle system-prompt mismatch: "
+                "bundle was built with a different system prompt than the current runtime. "
+                "Rebuild the bundle with the same system prompt as evaluation."
             )
 
 

@@ -18,6 +18,7 @@ from lighteval.models.custom.custom_model import CustomModelConfig
 from lighteval.pipeline import ParallelismManager, Pipeline, PipelineParameters
 
 from src.hidden_state.modeling import DEFAULT_MODEL_NAME
+from src.hidden_state.predictions_export import latest_saved_date_id, write_predictions_jsonl
 
 
 def _resolve_custom_tasks_source(custom_tasks: str, tasks: str) -> str:
@@ -101,6 +102,16 @@ def main() -> None:
     )
     pipeline.evaluate()
     pipeline.save_and_push_results()
+    date_id = latest_saved_date_id(args.output_dir, args.model_name)
+    if date_id is not None:
+        written_files = write_predictions_jsonl(
+            evaluation_tracker.details,
+            output_dir=args.output_dir,
+            model_name=args.model_name,
+            date_id=date_id,
+        )
+        for path in written_files:
+            print(f"Saved predictions JSONL: {path}", flush=True)
     pipeline.show_results()
 
 

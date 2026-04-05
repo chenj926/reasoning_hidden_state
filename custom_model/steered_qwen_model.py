@@ -52,7 +52,14 @@ class SteeredQwenLightevalModel(LightevalModel):
         self._tgs_bundle = None
         if self.runtime.steering_method == "tgs" and self.runtime.tgs_vector_path:
             bundle = load_steering_bundle(self.runtime.tgs_vector_path)
-            validate_steering_bundle_for_model(bundle, self.loaded.model, self.loaded.model_id)
+            validate_steering_bundle_for_model(
+                bundle,
+                self.loaded.model,
+                self.loaded.model_id,
+                use_chat_template=self.runtime.use_chat_template,
+                enable_thinking=self.runtime.enable_thinking,
+                system_prompt=self.runtime.system_prompt,
+            )
             self._tgs_bundle = select_last_k_layers(bundle, self.runtime.k)
 
     @property
@@ -96,6 +103,7 @@ class SteeredQwenLightevalModel(LightevalModel):
                 question,
                 benchmark_style=benchmark_style,
                 use_chat_template=self.runtime.use_chat_template,
+                enable_thinking=self.runtime.enable_thinking,
                 system_prompt=self.runtime.system_prompt,
             )
             return select_last_k_layers(full_bundle, self.runtime.k)
@@ -106,6 +114,7 @@ class SteeredQwenLightevalModel(LightevalModel):
             self.loaded.tokenizer,
             doc.query,
             use_chat_template=self.runtime.use_chat_template,
+            enable_thinking=self.runtime.enable_thinking,
             system_prompt=self.runtime.system_prompt,
         )
 

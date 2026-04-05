@@ -4,6 +4,7 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 
 @dataclass
@@ -15,6 +16,7 @@ class SteeringRuntimeConfig:
     norm_preserving: bool = True
     tgs_vector_path: str = ""
     use_chat_template: bool = False
+    enable_thinking: Optional[bool] = None
     system_prompt: str = "You are a careful mathematical reasoning assistant."
     default_max_new_tokens: int = 256
     temperature_for_sampling: float = 0.7
