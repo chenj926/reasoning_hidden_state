@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Optional
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-
-
-PrecisionMode = Literal["fp16", "bf16", "8bit", "4bit"]
 
 
 @dataclass
@@ -16,54 +13,41 @@ class LoadedModelBundle:
     model: AutoModelForCausalLM
     tokenizer: AutoTokenizer
     device: torch.device
-    precision: PrecisionMode
+    precision: str
 
 
-def _get_first_parameter_device(model: AutoModelForCausalLM) -> torch.device:
+def _get_first_parameter_device(model) -> torch.device:
     for param in model.parameters():
         return param.device
     return torch.device("cpu")
 
 
-def _resolve_dtype(precision: PrecisionMode) -> Optional[torch.dtype]:
+def _resolve_dtype(precision: str) -> Optional[torch.dtype]:
     if precision == "fp16":
         return torch.float16
     if precision == "bf16":
         if not torch.cuda.is_available():
-            raise RuntimeError("bf16 was requested, but CUDA is not available.")
+            raise RuntimeError("bf16 requested, but CUDA is unavailable.")
         if not torch.cuda.is_bf16_supported():
-            raise RuntimeError(
-                "bf16 was requested, but torch.cuda.is_bf16_supported() returned False."
-            )
+            raise RuntimeError("bf16 requested, but the current CUDA device does not support bf16.")
         return torch.bfloat16
     if precision in {"8bit", "4bit"}:
         return None
-    raise ValueError(f"Unknown precision mode: {precision}")
+    raise ValueError(f"Unknown precision: {precision}")
 
 
-def load_model_and_tokenizer(
-    model_id: str,
-    precision: PrecisionMode = "bf16",
-    device_map: str = "auto",
-) -> LoadedModelBundle:
+def load_model_and_tokenizer(model_id: str, precision: str = "bf16", device_map: str = "auto") -> LoadedModelBundle:
     model_kwargs: dict = {"device_map": device_map}
 
     if precision in {"8bit", "4bit"}:
-        try:
-            from transformers import BitsAndBytesConfig
-        except ImportError as exc:
-            raise RuntimeError(
-                "8bit/4bit precision requested but BitsAndBytesConfig is unavailable. "
-                "Install bitsandbytes first."
-            ) from exc
+        from transformers import BitsAndBytesConfig
 
         if precision == "8bit":
-            quantization_config = BitsAndBytesConfig(load_in_8bit=True)
+            model_kwargs["quantization_config"] = BitsAndBytesConfig(load_in_8bit=True)
         else:
-            quantization_config = BitsAndBytesConfig(load_in_4bit=True)
-        model_kwargs["quantization_config"] = quantization_config
+            model_kwargs["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True)
     else:
-        model_kwargs["torch_dtype"] = _resolve_dtype(precision)
+        model_kwargs["dtype"] = _resolve_dtype(precision)
 
     tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=True)
     if tokenizer.pad_token is None and tokenizer.eos_token is not None:
@@ -71,9 +55,6 @@ def load_model_and_tokenizer(
 
     model = AutoModelForCausalLM.from_pretrained(model_id, **model_kwargs)
     model.eval()
-
-    device = _get_first_parameter_device(model)
-
     if model.generation_config.pad_token_id is None and tokenizer.pad_token_id is not None:
         model.generation_config.pad_token_id = tokenizer.pad_token_id
 
@@ -81,6 +62,6 @@ def load_model_and_tokenizer(
         model_id=model_id,
         model=model,
         tokenizer=tokenizer,
-        device=device,
+        device=_get_first_parameter_device(model),
         precision=precision,
     )

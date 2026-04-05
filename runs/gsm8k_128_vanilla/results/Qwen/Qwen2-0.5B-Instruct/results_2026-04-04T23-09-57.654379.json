@@ -1,0 +1,118 @@
+{
+  "config_general": {
+    "lighteval_sha": "?",
+    "num_fewshot_seeds": 1,
+    "max_samples": 128,
+    "job_id": "0",
+    "start_time": 13622.574141639,
+    "end_time": 14536.346837199,
+    "total_evaluation_time_secondes": "913.772695560001",
+    "model_config": {
+      "model_name": "Qwen/Qwen2-0.5B-Instruct",
+      "generation_parameters": {
+        "num_blocks": null,
+        "block_size": null,
+        "early_stopping": null,
+        "repetition_penalty": null,
+        "frequency_penalty": null,
+        "length_penalty": null,
+        "presence_penalty": null,
+        "max_new_tokens": null,
+        "min_new_tokens": null,
+        "seed": null,
+        "stop_tokens": null,
+        "temperature": 0,
+        "top_k": null,
+        "min_p": null,
+        "top_p": null,
+        "truncate_prompt": null,
+        "cache_implementation": null,
+        "response_format": null
+      },
+      "system_prompt": null,
+      "cache_dir": "~/.cache/huggingface/lighteval",
+      "model_definition_file_path": "/home/chenj926/reasoning/reasoning_hidden_state/custom_model/steered_qwen_model.py"
+    },
+    "model_name": "Qwen/Qwen2-0.5B-Instruct"
+  },
+  "results": {
+    "custom|gsm8k_steering_exact|0": {
+      "extractive_match": 0.34375,
+      "extractive_match_stderr": 0.0421457853694702
+    },
+    "all": {
+      "extractive_match": 0.34375,
+      "extractive_match_stderr": 0.0421457853694702
+    }
+  },
+  "versions": {},
+  "config_tasks": {
+    "custom|gsm8k_steering_exact|0": {
+      "name": "gsm8k_steering_exact",
+      "prompt_function": "prompt_fn",
+      "hf_repo": "openai/gsm8k",
+      "hf_subset": "main",
+      "metrics": [
+        {
+          "metric_name": "extractive_match",
+          "higher_is_better": true,
+          "category": "GENERATIVE",
+          "sample_level_fn": "MultilingualExtractiveMatchMetric(language=Language.ENGLISH, gold_extraction_target=(ExprExtractionConfig(try_extract_without_anchor=True),), pred_extraction_target=(ExprExtractionConfig(try_extract_without_anchor=True), LatexExtractionConfig(try_extract_without_anchor=True, boxed_match_priority=0, normalization_config=NormalizationConfig(basic_latex=True, units=True, malformed_operators=True, nits=True, boxed='all', equations=True))), aggregation_function=max, fallback_mode=first_match, extraction_mode=any_match, precision=5, timeout_seconds=5)",
+          "corpus_level_fn": "mean",
+          "batched_compute": false
+        }
+      ],
+      "hf_revision": null,
+      "hf_filter": null,
+      "hf_avail_splits": [
+        "train",
+        "test"
+      ],
+      "evaluation_splits": [
+        "test"
+      ],
+      "few_shots_split": null,
+      "few_shots_select": "random_sampling_from_train",
+      "generation_size": 256,
+      "generation_grammar": null,
+      "stop_sequence": [
+        "Question:"
+      ],
+      "num_samples": null,
+      "suite": [
+        "custom"
+      ],
+      "original_num_docs": -1,
+      "effective_num_docs": -1,
+      "must_remove_duplicate_docs": false,
+      "num_fewshots": 0,
+      "version": 0
+    }
+  },
+  "summary_tasks": {
+    "custom|gsm8k_steering_exact|0": {
+      "hashes": {
+        "hash_examples": "0f482f7bbef76d65",
+        "hash_full_prompts": "ef46db3751d8e999",
+        "hash_input_tokens": "9688d052da780d92",
+        "hash_cont_tokens": "61d4d6d41df30116"
+      },
+      "truncated": 0,
+      "non_truncated": 0,
+      "padded": 0,
+      "non_padded": 0
+    }
+  },
+  "summary_general": {
+    "hashes": {
+      "hash_examples": "29a7927cf172e9c0",
+      "hash_full_prompts": "c166e5d20ad58f4e",
+      "hash_input_tokens": "e154f791c857f648",
+      "hash_cont_tokens": "dc8b824fd89e5857"
+    },
+    "truncated": 0,
+    "non_truncated": 0,
+    "padded": 0,
+    "non_padded": 0
+  }
+}

@@ -1,82 +1,85 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
-from typing import Optional
 
-from transformers import AutoTokenizer
+from transformers import PreTrainedTokenizerBase
 
 DEFAULT_SYSTEM_PROMPT = "You are a careful mathematical reasoning assistant."
 
-# This CoT template intentionally mirrors the official Lighteval GSM8K task wording.
-COT_TEMPLATE = (
-    "Solve the following math problem step by step. The last line of your\n"
-    "response should be of the form \"ANSWER: $ANSWER\" (without quotes)\n"
-    "where $ANSWER is the answer to the problem.\n\n"
-    "{prompt}\n\n"
-    "Remember to put your answer on its own line at the end in the form\n"
-    "\"ANSWER: $ANSWER\" (without quotes) where $ANSWER is the answer to\n"
-    "the problem, and you do not need to use a \\boxed command.\n\n"
-    "Reasoning:"
-)
+GSM8K_COT_TEMPLATE = """Solve the following math problem step by step.
+The last line of your response should be of the form \"ANSWER: $ANSWER\" (without quotes) where $ANSWER is the answer to the problem.
 
-NORMAL_TEMPLATE = (
-    "Answer the following math problem. The last line of your\n"
-    "response should be of the form \"ANSWER: $ANSWER\" (without quotes)\n"
-    "where $ANSWER is the answer to the problem.\n\n"
-    "{prompt}\n\n"
-    "Remember to put your answer on its own line at the end in the form\n"
-    "\"ANSWER: $ANSWER\" (without quotes) where $ANSWER is the answer to\n"
-    "the problem, and you do not need to use a \\boxed command.\n\n"
-    "Answer:"
-)
+{prompt}
+
+Remember to put your answer on its own line at the end in the form \"ANSWER: $ANSWER\" (without quotes) where $ANSWER is the answer to the problem, and you do not need to use a \\boxed command.
+
+Reasoning:"""
+
+NORMAL_TEMPLATE = """Answer the following math problem.
+The last line of your response should be of the form \"ANSWER: $ANSWER\" (without quotes) where $ANSWER is the answer to the problem.
+
+{prompt}
+
+Remember to put your answer on its own line at the end in the form \"ANSWER: $ANSWER\" (without quotes) where $ANSWER is the answer to the problem.
+
+Answer:"""
+
+MATH_STOCK_TEMPLATE = "Question: {prompt}\nAnswer:"
+MATH_GREEDY_TEMPLATE = GSM8K_COT_TEMPLATE
 
 
 @dataclass
 class PromptPair:
     question: str
-    cot_user_prompt: str
-    norm_user_prompt: str
-    cot_model_prompt: str
-    norm_model_prompt: str
+    cot_prompt: str
+    norm_prompt: str
 
 
-def _wrap_with_chat_template(
-    tokenizer: AutoTokenizer,
-    user_prompt: str,
+def maybe_apply_chat_template(
+    tokenizer: PreTrainedTokenizerBase,
+    prompt_text: str,
+    *,
+    use_chat_template: bool,
     system_prompt: str = DEFAULT_SYSTEM_PROMPT,
 ) -> str:
+    if not use_chat_template:
+        return prompt_text
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_prompt},
+        {"role": "user", "content": prompt_text},
     ]
-    return tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True,
-    )
+    return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
 
-def build_prompt_pair(
-    tokenizer: AutoTokenizer,
-    question: str,
-    *,
-    use_chat_template: bool = True,
-    system_prompt: str = DEFAULT_SYSTEM_PROMPT,
-) -> PromptPair:
-    cot_user_prompt = COT_TEMPLATE.format(prompt=question)
-    norm_user_prompt = NORMAL_TEMPLATE.format(prompt=question)
-
-    if use_chat_template:
-        cot_model_prompt = _wrap_with_chat_template(tokenizer, cot_user_prompt, system_prompt)
-        norm_model_prompt = _wrap_with_chat_template(tokenizer, norm_user_prompt, system_prompt)
+def build_prompt_pair_for_question(question: str, benchmark_style: str) -> PromptPair:
+    if benchmark_style == "gsm8k":
+        cot_prompt = GSM8K_COT_TEMPLATE.format(prompt=question)
+        norm_prompt = NORMAL_TEMPLATE.format(prompt=question)
+    elif benchmark_style == "math_stock":
+        cot_prompt = GSM8K_COT_TEMPLATE.format(prompt=question)
+        norm_prompt = MATH_STOCK_TEMPLATE.format(prompt=question)
+    elif benchmark_style == "math_greedy":
+        cot_prompt = MATH_GREEDY_TEMPLATE.format(prompt=question)
+        norm_prompt = NORMAL_TEMPLATE.format(prompt=question)
     else:
-        cot_model_prompt = cot_user_prompt
-        norm_model_prompt = norm_user_prompt
+        cot_prompt = GSM8K_COT_TEMPLATE.format(prompt=question)
+        norm_prompt = NORMAL_TEMPLATE.format(prompt=question)
+    return PromptPair(question=question, cot_prompt=cot_prompt, norm_prompt=norm_prompt)
 
-    return PromptPair(
-        question=question,
-        cot_user_prompt=cot_user_prompt,
-        norm_user_prompt=norm_user_prompt,
-        cot_model_prompt=cot_model_prompt,
-        norm_model_prompt=norm_model_prompt,
-    )
+
+def infer_raw_question_from_query(query: str) -> str:
+    if "Solve the following math problem step by step." in query:
+        text = query
+        marker_a = "problem.\n\n"
+        marker_b = "\n\nRemember to put your answer"
+        if marker_a in text and marker_b in text:
+            start = text.index(marker_a) + len(marker_a)
+            end = text.index(marker_b, start)
+            return text[start:end].strip()
+
+    m = re.match(r"Question:\s*(.*)\nAnswer:\s*$", query, flags=re.DOTALL)
+    if m:
+        return m.group(1).strip()
+
+    return query.strip()

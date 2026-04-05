@@ -1,0 +1,13 @@
+{
+  "precision": "bf16",
+  "steering_method": "none",
+  "alpha": 0.05,
+  "k": 3,
+  "norm_preserving": true,
+  "tgs_vector_path": "",
+  "use_chat_template": false,
+  "system_prompt": "You are a careful mathematical reasoning assistant.",
+  "default_max_new_tokens": 256,
+  "temperature_for_sampling": 0.7,
+  "top_p_for_sampling": 0.95
+}
