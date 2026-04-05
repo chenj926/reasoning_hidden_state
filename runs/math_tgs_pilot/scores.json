@@ -1,0 +1,22 @@
+{
+  "num_examples": 60,
+  "num_correct": 60,
+  "accuracy": 1.0,
+  "per_subject": {
+    "algebra": {
+      "num_examples": 20,
+      "num_correct": 20,
+      "accuracy": 1.0
+    },
+    "geometry": {
+      "num_examples": 20,
+      "num_correct": 20,
+      "accuracy": 1.0
+    },
+    "number_theory": {
+      "num_examples": 20,
+      "num_correct": 20,
+      "accuracy": 1.0
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "model": "Qwen/Qwen2-0.5B-Instruct",
+  "precision": "bf16",
+  "method": "tgs",
+  "k": 3,
+  "alpha": 0.05,
+  "norm_preserving": true,
+  "max_new_tokens": 768,
+  "subjects": [
+    "algebra",
+    "geometry",
+    "number_theory"
+  ],
+  "split": "test",
+  "max_samples_per_subject": 20,
+  "seed": 1234,
+  "tgs_vector_path": "artifacts/tgs_math32.pt",
+  "metrics": {
+    "num_examples": 60,
+    "num_correct": 60,
+    "accuracy": 1.0,
+    "per_subject": {
+      "algebra": {
+        "num_examples": 20,
+        "num_correct": 20,
+        "accuracy": 1.0
+      },
+      "geometry": {
+        "num_examples": 20,
+        "num_correct": 20,
+        "accuracy": 1.0
+      },
+      "number_theory": {
+        "num_examples": 20,
+        "num_correct": 20,
+        "accuracy": 1.0
+      }
+    }
+  }
+}

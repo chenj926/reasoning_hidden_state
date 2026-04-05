@@ -1,0 +1,18 @@
+{
+  "model": "Qwen/Qwen2-0.5B-Instruct",
+  "precision": "bf16",
+  "method": "baseline",
+  "k": 3,
+  "alpha": 0.05,
+  "norm_preserving": true,
+  "max_new_tokens": 256,
+  "split": "test",
+  "max_samples": 100,
+  "seed": 1234,
+  "tgs_vector_path": "",
+  "metrics": {
+    "num_examples": 100,
+    "num_correct": 100,
+    "accuracy": 1.0
+  }
+}
