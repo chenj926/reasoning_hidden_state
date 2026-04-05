@@ -43,7 +43,7 @@ def _resolve_dtype(precision: PrecisionMode) -> Optional[torch.dtype]:
 
 def load_model_and_tokenizer(
     model_id: str,
-    precision: PrecisionMode = "fp16",
+    precision: PrecisionMode = "bf16",
     device_map: str = "auto",
 ) -> LoadedModelBundle:
     model_kwargs: dict = {"device_map": device_map}

@@ -25,6 +25,7 @@ def extract_final_prompt_token_hidden_states(
     encoded = {k: v.to(device) for k, v in encoded.items()}
     final_prompt_index = int(encoded["input_ids"].shape[1] - 1)
 
+    # hiddent state implementation
     outputs = model(
         **encoded,
         output_hidden_states=True,

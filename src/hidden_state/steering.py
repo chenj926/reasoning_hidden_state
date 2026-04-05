@@ -113,8 +113,8 @@ class SteeringHookManager(AbstractContextManager):
                 device=output.device,
                 dtype=output.dtype,
             )
-            steered = output + self.alpha * vector
-            if self.norm_preserving:
+            steered = output + self.alpha * vector  # the injection phase happens here 
+            if self.norm_preserving:  # doing norm perserving 
                 original_norm = output.norm(dim=-1, keepdim=True).clamp_min(self.eps)
                 steered_norm = steered.norm(dim=-1, keepdim=True).clamp_min(self.eps)
                 steered = steered * (original_norm / steered_norm)
