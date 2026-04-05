@@ -55,6 +55,80 @@ def load_steering_bundle(path: str | Path) -> SteeringBundle:
     )
 
 
+def validate_steering_bundle_for_model(bundle: SteeringBundle, model, model_id: str) -> None:
+    config = model.config
+    expected_hidden_size = getattr(config, "hidden_size", None)
+    expected_num_hidden_layers = getattr(config, "num_hidden_layers", None)
+
+    bundle_model_id = bundle.metadata.get("model_id")
+    bundle_hidden_size = bundle.metadata.get("hidden_size")
+    bundle_num_hidden_layers = bundle.metadata.get("num_hidden_layers")
+
+    if bundle_model_id and bundle_model_id != model_id:
+        raise ValueError(
+            "Steering bundle/model mismatch: "
+            f"bundle was built for {bundle_model_id}, but runtime model is {model_id}. "
+            "Rebuild the bundle for the target model."
+        )
+
+    if (
+        bundle_hidden_size is not None
+        and expected_hidden_size is not None
+        and int(bundle_hidden_size) != int(expected_hidden_size)
+    ):
+        raise ValueError(
+            "Steering bundle hidden size mismatch: "
+            f"bundle metadata says {bundle_hidden_size}, but {model_id} expects {expected_hidden_size}. "
+            "Rebuild the bundle for the target model."
+        )
+
+    if (
+        bundle_num_hidden_layers is not None
+        and expected_num_hidden_layers is not None
+        and int(bundle_num_hidden_layers) != int(expected_num_hidden_layers)
+    ):
+        raise ValueError(
+            "Steering bundle layer-count mismatch: "
+            f"bundle metadata says {bundle_num_hidden_layers}, but {model_id} expects {expected_num_hidden_layers}. "
+            "Rebuild the bundle for the target model."
+        )
+
+    if expected_num_hidden_layers is not None:
+        invalid_layers = [
+            layer_idx for layer_idx in bundle.layer_indices if layer_idx >= int(expected_num_hidden_layers)
+        ]
+        if invalid_layers:
+            raise ValueError(
+                "Steering bundle targets unavailable layers: "
+                f"{invalid_layers[:5]} for model {model_id} with {expected_num_hidden_layers} layers."
+            )
+
+    if expected_hidden_size is not None:
+        mismatched = [
+            (layer_idx, int(vector.numel()))
+            for layer_idx, vector in bundle.layer_vectors.items()
+            if int(vector.numel()) != int(expected_hidden_size)
+        ]
+        if mismatched:
+            layer_idx, actual_size = mismatched[0]
+            raise ValueError(
+                "Steering bundle vector size mismatch: "
+                f"layer {layer_idx} has dim {actual_size}, but {model_id} expects {expected_hidden_size}. "
+                "Rebuild the bundle for the target model."
+            )
+
+
+def _get_decoder_layers(model):
+    base_model = getattr(model, "model", None)
+    if base_model is not None and hasattr(base_model, "layers"):
+        return base_model.layers
+    if hasattr(model, "layers"):
+        return model.layers
+    raise AttributeError(
+        "Unsupported model architecture for steering hooks: expected `.model.layers` or `.layers`."
+    )
+
+
 class SteeringHookManager(AbstractContextManager):
     def __init__(self, model, steering_bundle: SteeringBundle, alpha: float, norm_preserving: bool = True, eps: float = 1e-6):
         self.model = model
@@ -78,7 +152,7 @@ class SteeringHookManager(AbstractContextManager):
         return hook
 
     def __enter__(self):
-        layers = self.model.model.layers
+        layers = _get_decoder_layers(self.model)
         for layer_idx in self.bundle.layer_indices:
             handle = layers[layer_idx].register_forward_hook(self._make_hook(self.bundle.layer_vectors[layer_idx]))
             self.handles.append(handle)

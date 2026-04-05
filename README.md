@@ -1,6 +1,10 @@
 # qwen_steering_project
 
-Minimal, local, text-only adaptation of hidden-state steering for `Qwen/Qwen2-0.5B-Instruct`.
+Minimal, local, text-only adaptation of hidden-state steering for `Qwen/Qwen3-0.6B`.
+
+The default model ID in the runner scripts is now `Qwen/Qwen3-0.6B`.
+If you previously built TGS artifacts for `Qwen/Qwen2-0.5B-Instruct`, rebuild them before running TGS with Qwen3:
+the old vectors were extracted from a 24-layer / 896-d hidden space, while `Qwen3-0.6B` uses 28 layers / 1024-d.
 
 This code is designed for:
 - WSL2 / Linux

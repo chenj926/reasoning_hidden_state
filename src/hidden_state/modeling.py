@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
+
+DEFAULT_MODEL_NAME = "Qwen/Qwen3-0.6B"
 
 
 @dataclass
@@ -14,6 +16,19 @@ class LoadedModelBundle:
     tokenizer: AutoTokenizer
     device: torch.device
     precision: str
+
+    def architecture_metadata(self) -> dict[str, Any]:
+        config = self.model.config
+        hidden_size = getattr(config, "hidden_size", None)
+        num_hidden_layers = getattr(config, "num_hidden_layers", None)
+        max_position_embeddings = getattr(config, "max_position_embeddings", None)
+        return {
+            "model_id": self.model_id,
+            "model_type": str(getattr(config, "model_type", "unknown")),
+            "hidden_size": int(hidden_size) if hidden_size is not None else None,
+            "num_hidden_layers": int(num_hidden_layers) if num_hidden_layers is not None else None,
+            "max_position_embeddings": int(max_position_embeddings) if max_position_embeddings is not None else None,
+        }
 
 
 def _get_first_parameter_device(model) -> torch.device:

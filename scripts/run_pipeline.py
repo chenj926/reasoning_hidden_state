@@ -17,6 +17,8 @@ from lighteval.logging.evaluation_tracker import EvaluationTracker
 from lighteval.models.custom.custom_model import CustomModelConfig
 from lighteval.pipeline import ParallelismManager, Pipeline, PipelineParameters
 
+from src.hidden_state.modeling import DEFAULT_MODEL_NAME
+
 
 def _resolve_custom_tasks_source(custom_tasks: str, tasks: str) -> str:
     candidate = Path(custom_tasks)
@@ -61,7 +63,7 @@ def _normalize_tasks(tasks: str) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model-name', default='Qwen/Qwen2-0.5B-Instruct')
+    parser.add_argument('--model-name', default=DEFAULT_MODEL_NAME)
     parser.add_argument('--tasks', required=True)
     parser.add_argument('--custom-tasks-dir', default=DEFAULT_CUSTOM_TASKS_MODULE)
     parser.add_argument('--steering-config', required=True)

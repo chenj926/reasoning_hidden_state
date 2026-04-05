@@ -13,7 +13,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.hidden_state.extraction import build_tgs_bundle
-from src.hidden_state.modeling import load_model_and_tokenizer
+from src.hidden_state.modeling import DEFAULT_MODEL_NAME, load_model_and_tokenizer
 from src.hidden_state.steering_core import save_steering_bundle
 
 
@@ -35,7 +35,7 @@ def load_questions(aux_source: str, count: int, offset: int) -> list[str]:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', default='Qwen/Qwen2-0.5B-Instruct')
+    parser.add_argument('--model', default=DEFAULT_MODEL_NAME)
     parser.add_argument('--precision', default='bf16', choices=['fp16','bf16','8bit','4bit'])
     parser.add_argument('--aux-source', default='math_train', choices=['math_train','gsm8k_train'])
     parser.add_argument('--aux-count', type=int, default=32)
@@ -48,6 +48,7 @@ def main() -> None:
 
     questions = load_questions(args.aux_source, args.aux_count, args.offset)
     bundle = load_model_and_tokenizer(args.model, precision=args.precision)
+    model_metadata = bundle.architecture_metadata()
     tgs = build_tgs_bundle(
         bundle,
         questions,
@@ -58,6 +59,9 @@ def main() -> None:
     save_steering_bundle(tgs, args.output)
     meta = {
         'model': args.model,
+        'model_type': model_metadata['model_type'],
+        'hidden_size': model_metadata['hidden_size'],
+        'num_hidden_layers': model_metadata['num_hidden_layers'],
         'precision': args.precision,
         'aux_source': args.aux_source,
         'aux_count': args.aux_count,

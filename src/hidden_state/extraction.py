@@ -57,7 +57,11 @@ def build_vanilla_bundle_for_question(
     return SteeringBundle(
         layer_vectors=difference_dict(cot_states, norm_states),
         source="vanilla",
-        metadata={"question": question, "benchmark_style": benchmark_style},
+        metadata={
+            **bundle.architecture_metadata(),
+            "question": question,
+            "benchmark_style": benchmark_style,
+        },
     )
 
 
@@ -91,5 +95,9 @@ def build_tgs_bundle(
     return SteeringBundle(
         layer_vectors=averaged,
         source="tgs",
-        metadata={"auxiliary_count": count, "benchmark_style": benchmark_style},
+        metadata={
+            **bundle.architecture_metadata(),
+            "auxiliary_count": count,
+            "benchmark_style": benchmark_style,
+        },
     )

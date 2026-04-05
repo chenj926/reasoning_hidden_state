@@ -25,7 +25,11 @@ from src.hidden_state.generation import generate_samples
 from src.hidden_state.logprob import _sum_continuation_logprob, rolling_loglikelihood
 from src.hidden_state.modeling import load_model_and_tokenizer
 from src.hidden_state.prompting import infer_raw_question_from_query, maybe_apply_chat_template
-from src.hidden_state.steering_core import load_steering_bundle, select_last_k_layers
+from src.hidden_state.steering_core import (
+    load_steering_bundle,
+    select_last_k_layers,
+    validate_steering_bundle_for_model,
+)
 
 
 class SteeredQwenLightevalModel(LightevalModel):
@@ -47,7 +51,9 @@ class SteeredQwenLightevalModel(LightevalModel):
         self._cache = SampleCache(cache_config)
         self._tgs_bundle = None
         if self.runtime.steering_method == "tgs" and self.runtime.tgs_vector_path:
-            self._tgs_bundle = select_last_k_layers(load_steering_bundle(self.runtime.tgs_vector_path), self.runtime.k)
+            bundle = load_steering_bundle(self.runtime.tgs_vector_path)
+            validate_steering_bundle_for_model(bundle, self.loaded.model, self.loaded.model_id)
+            self._tgs_bundle = select_last_k_layers(bundle, self.runtime.k)
 
     @property
     def tokenizer(self):
