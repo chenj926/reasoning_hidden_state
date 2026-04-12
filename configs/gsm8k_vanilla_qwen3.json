@@ -1,7 +1,7 @@
 {
   "precision": "bf16",
   "steering_method": "vanilla",
-  "alpha": 0.2,
+  "alpha": 0.1,
   "k": 3,
   "norm_preserving": true,
   "tgs_vector_path": "",

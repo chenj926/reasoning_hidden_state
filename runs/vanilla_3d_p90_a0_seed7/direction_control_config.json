@@ -1,0 +1,18 @@
+{
+  "precision": "bf16",
+  "steering_method": "vanilla",
+  "alpha": 0.1,
+  "k": 3,
+  "norm_preserving": true,
+  "tgs_vector_path": "",
+  "use_chat_template": true,
+  "enable_thinking": false,
+  "system_prompt": "You are a careful mathematical reasoning assistant.",
+  "default_max_new_tokens": 256,
+  "temperature_for_sampling": 0.7,
+  "top_p_for_sampling": 0.95,
+  "direction_control_mode": "rotate_3d",
+  "direction_control_seed": 7,
+  "direction_control_polar_deg": 90.0,
+  "direction_control_azimuth_deg": 0.0
+}

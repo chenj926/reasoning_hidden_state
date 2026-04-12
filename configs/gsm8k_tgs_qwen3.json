@@ -1,8 +1,8 @@
 {
   "precision": "bf16",
   "steering_method": "tgs",
-  "alpha": 0.05,
-  "k": 5,
+  "alpha": 0.1,
+  "k": 3,
   "norm_preserving": true,
   "tgs_vector_path": "artifacts/tgs_gsm8k_train32_qwen3_0.6b_chat_nothink.pt",
   "use_chat_template": true,

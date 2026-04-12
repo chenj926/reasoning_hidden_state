@@ -15,6 +15,11 @@ class SteeringRuntimeConfig:
     k: int = 3
     norm_preserving: bool = True
     tgs_vector_path: str = ""
+    direction_control_mode: str = "none"  # none | rotate_2d | rotate_3d
+    direction_control_seed: int = 0
+    direction_control_angle_deg: Optional[float] = None
+    direction_control_polar_deg: Optional[float] = None
+    direction_control_azimuth_deg: Optional[float] = None
     use_chat_template: bool = False
     enable_thinking: Optional[bool] = None
     system_prompt: str = "You are a careful mathematical reasoning assistant."

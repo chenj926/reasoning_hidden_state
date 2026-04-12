@@ -20,6 +20,11 @@ from lighteval.tasks.requests import Doc
 from lighteval.utils.cache_management import SampleCache, cached
 
 from src.hidden_state.config import load_runtime_config
+from src.hidden_state.direction_control import (
+    DirectionControlSpec,
+    apply_direction_control,
+    describe_direction_control,
+)
 from src.hidden_state.extraction import build_vanilla_bundle_for_question
 from src.hidden_state.generation import generate_samples
 from src.hidden_state.logprob import _sum_continuation_logprob, rolling_loglikelihood
@@ -49,6 +54,13 @@ class SteeredQwenLightevalModel(LightevalModel):
             }
         )
         self._cache = SampleCache(cache_config)
+        self._direction_control = DirectionControlSpec(
+            mode=self.runtime.direction_control_mode,
+            seed=int(self.runtime.direction_control_seed),
+            angle_deg=self.runtime.direction_control_angle_deg,
+            polar_deg=self.runtime.direction_control_polar_deg,
+            azimuth_deg=self.runtime.direction_control_azimuth_deg,
+        )
         self._tgs_bundle = None
         if self.runtime.steering_method == "tgs" and self.runtime.tgs_vector_path:
             bundle = load_steering_bundle(self.runtime.tgs_vector_path)
@@ -60,7 +72,7 @@ class SteeredQwenLightevalModel(LightevalModel):
                 enable_thinking=self.runtime.enable_thinking,
                 system_prompt=self.runtime.system_prompt,
             )
-            self._tgs_bundle = select_last_k_layers(bundle, self.runtime.k)
+            self._tgs_bundle = self._apply_direction_control(select_last_k_layers(bundle, self.runtime.k))
 
     @property
     def tokenizer(self):
@@ -106,8 +118,11 @@ class SteeredQwenLightevalModel(LightevalModel):
                 enable_thinking=self.runtime.enable_thinking,
                 system_prompt=self.runtime.system_prompt,
             )
-            return select_last_k_layers(full_bundle, self.runtime.k)
+            return self._apply_direction_control(select_last_k_layers(full_bundle, self.runtime.k))
         raise ValueError(f"Unsupported steering method: {method}")
+
+    def _apply_direction_control(self, bundle):
+        return apply_direction_control(bundle, self._direction_control)
 
     def _prepare_prompt(self, doc: Doc) -> str:
         return maybe_apply_chat_template(
@@ -121,7 +136,10 @@ class SteeredQwenLightevalModel(LightevalModel):
     def _progress_desc(self, docs: list[Doc], phase: str) -> str:
         task_names = sorted({getattr(doc, "task_name", "") or "unknown" for doc in docs})
         label = task_names[0] if len(task_names) == 1 else f"{len(task_names)} tasks"
-        return f"{phase} [{self.runtime.steering_method}] {label}"
+        method_label = self.runtime.steering_method
+        if method_label != "none" and self._direction_control.is_active():
+            method_label = f"{method_label}/{describe_direction_control(self._direction_control)}"
+        return f"{phase} [{method_label}] {label}"
 
     def _progress_interval(self, total: int) -> int:
         return max(1, total // 20)
